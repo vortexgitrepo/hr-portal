@@ -5,7 +5,7 @@ import com.hrportal.dto.LoginResponse;
 import com.hrportal.dto.UserRegistrationRequest;
 import com.hrportal.entity.User;
 import com.hrportal.exception.EmailAlreadyExistsException;
-import com.hrportal.exception.UserNotFoundException;
+import com.hrportal.exception.InvalidCredentialsException;
 import com.hrportal.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -38,13 +38,13 @@ public class UserService {
     public User login(LoginRequest request) {
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UserNotFoundException(
-                        "User Not Found"
+                .orElseThrow(() -> new InvalidCredentialsException(
+                        "Invalid email or password"
                 ));
         if (!passwordEncoder.matches(
                 request.getPassword(),
                 user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new InvalidCredentialsException("Invalid email or password");
         }
         return user;
     }

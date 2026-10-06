@@ -5,6 +5,7 @@ import com.hrportal.dto.LoginResponse;
 import com.hrportal.dto.UserRegistrationRequest;
 import com.hrportal.dto.UserRegistrationResponse;
 import com.hrportal.entity.User;
+import com.hrportal.service.JwtService;
 import com.hrportal.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -17,9 +18,12 @@ public class UserController {
 
 private final UserService userService;
 
+private final JwtService jwtService;
 
-public UserController(UserService userService){
+
+public UserController(UserService userService, JwtService jwtService){
     this.userService=userService;
+    this.jwtService=jwtService;
 }
 
 @PostMapping("/register")
@@ -38,8 +42,9 @@ public ResponseEntity<UserRegistrationResponse> register(@Valid @RequestBody
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody
                                                LoginRequest loginRequest){
     User user = userService.login(loginRequest);
+    String token = jwtService.generateToken(user);
     LoginResponse response = new LoginResponse(user.getId(),
-            user.getName(),"Login Succesfully");
+            user.getName(),"Login Succesfully", token, "Bearer");
     return ResponseEntity.ok(response);
 }
 }
