@@ -1,5 +1,7 @@
 package com.hrportal.controller;
 
+import com.hrportal.dto.LoginRequest;
+import com.hrportal.dto.LoginResponse;
 import com.hrportal.dto.UserRegistrationRequest;
 import com.hrportal.dto.UserRegistrationResponse;
 import com.hrportal.entity.User;
@@ -15,12 +17,13 @@ public class UserController {
 
 private final UserService userService;
 
+
 public UserController(UserService userService){
     this.userService=userService;
 }
 
 @PostMapping("/register")
-    public ResponseEntity<UserRegistrationResponse> register(@Valid @RequestBody
+public ResponseEntity<UserRegistrationResponse> register(@Valid @RequestBody
                                            UserRegistrationRequest request){
 
    User user = userService.register(request);
@@ -29,5 +32,14 @@ public UserController(UserService userService){
             user.getEmail(),"User registered successfully");
     return ResponseEntity.status(HttpStatus.CREATED)
             .body(response);
+}
+
+@PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody
+                                               LoginRequest loginRequest){
+    User user = userService.login(loginRequest);
+    LoginResponse response = new LoginResponse(user.getId(),
+            user.getName(),"Login Succesfully");
+    return ResponseEntity.ok(response);
 }
 }
