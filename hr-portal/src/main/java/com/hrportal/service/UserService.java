@@ -4,11 +4,14 @@ import com.hrportal.dto.LoginRequest;
 import com.hrportal.dto.LoginResponse;
 import com.hrportal.dto.UserRegistrationRequest;
 import com.hrportal.entity.User;
+import com.hrportal.enums.Role;
 import com.hrportal.exception.EmailAlreadyExistsException;
 import com.hrportal.exception.InvalidCredentialsException;
 import com.hrportal.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class UserService {
@@ -25,12 +28,24 @@ public class UserService {
     public User register(UserRegistrationRequest request) {
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new EmailAlreadyExistsException("Email already registere");
+            throw new EmailAlreadyExistsException("Email already registered");
         }
         User user = new User();
         user.setName(request.getName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        Role role = Role.CANDIDATE;
+        if (request.getRole() != null && !request.getRole().isBlank()) {
+            try {
+                Role requestedRole = Role.valueOf(request.getRole().toUpperCase());
+                if (requestedRole == Role.HR) {
+                    role = Role.HR;
+                }
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        user.setRole(role);
 
         return userRepository.save(user);
     }
@@ -47,5 +62,13 @@ public class UserService {
             throw new InvalidCredentialsException("Invalid email or password");
         }
         return user;
+    }
+
+    public List<User> findAllUsers() {
+        return userRepository.findAll();
+    }
+
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
     }
 }

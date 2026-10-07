@@ -7,6 +7,9 @@ import com.hrportal.service.ResumeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,54 +24,52 @@ public class ResumeController {
         this.resumeService = resumeService;
     }
 
-    @PostMapping
-    public ResponseEntity<ResumeResponse> create(@Valid @RequestBody
-                                                 ResumeRequest request) {
+    @Transactional(readOnly = true)
+    @GetMapping("/my")
+    public ResponseEntity<List<ResumeResponse>> getMyResumes() {
+        Long userId = getCurrentUserId();
+        List<ResumeResponse> resumes = resumeService.getByJobSeekerId(userId).stream()
+                .map(resume -> toResponse(resume, null))
+                .toList();
+        return ResponseEntity.ok(resumes);
+    }
 
+    @Transactional
+    @PostMapping("/my")
+    public ResponseEntity<ResumeResponse> createMyResume(@Valid @RequestBody ResumeRequest request) {
+        Long userId = getCurrentUserId();
+        request.setJobSeekerId(userId);
         Resume resume = resumeService.create(request);
-
         ResumeResponse response = toResponse(resume, "Resume created successfully");
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping
-    public ResponseEntity<List<ResumeResponse>> getAll() {
-
-        List<ResumeResponse> resumes = resumeService.getAll().stream()
-                .map(resume -> toResponse(resume, null))
-                .toList();
-
-        return ResponseEntity.ok(resumes);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<ResumeResponse> getById(@PathVariable Long id) {
-
-        Resume resume = resumeService.getById(id);
-
-        ResumeResponse response = toResponse(resume, "Resume fetched successfully");
-        return ResponseEntity.ok(response);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<ResumeResponse> update(@PathVariable Long id,
-                                                 @Valid @RequestBody
-                                                 ResumeRequest request) {
-
-        Resume resume = resumeService.update(id, request);
-
+    @Transactional
+    @PutMapping("/my/{id}")
+    public ResponseEntity<ResumeResponse> updateMyResume(@PathVariable Long id,
+                                                         @Valid @RequestBody ResumeRequest request) {
+        Long userId = getCurrentUserId();
+        Resume resume = resumeService.update(id, request, userId);
         ResumeResponse response = toResponse(resume, "Resume updated successfully");
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ResumeResponse> delete(@PathVariable Long id) {
-
+    @Transactional
+    @DeleteMapping("/my/{id}")
+    public ResponseEntity<ResumeResponse> deleteMyResume(@PathVariable Long id) {
+        Long userId = getCurrentUserId();
         Resume resume = resumeService.getById(id);
-        resumeService.delete(id);
-
+        resumeService.delete(id, userId);
         ResumeResponse response = toResponse(resume, "Resume deleted successfully");
         return ResponseEntity.ok(response);
+    }
+
+    private Long getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new RuntimeException("User not authenticated");
+        }
+        return (Long) auth.getPrincipal();
     }
 
     private ResumeResponse toResponse(Resume resume, String message) {

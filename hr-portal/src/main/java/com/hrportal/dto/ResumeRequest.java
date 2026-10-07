@@ -1,11 +1,9 @@
 package com.hrportal.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 public class ResumeRequest {
 
-    @NotNull(message = "Job seeker id is required")
     private Long jobSeekerId;
 
     @NotBlank(message = "File name is required")

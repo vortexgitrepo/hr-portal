@@ -17,6 +17,8 @@ public class UserRegistrationRequest {
     @Size(min = 8, message = "Password must contain at least 8 characters")
     private String password;
 
+    private String role;
+
     public UserRegistrationRequest() {
     }
 
@@ -42,5 +44,13 @@ public class UserRegistrationRequest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

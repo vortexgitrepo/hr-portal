@@ -23,7 +23,7 @@ public class CompanyController {
 
     @PostMapping
     public ResponseEntity<CompanyResponse> create(@Valid @RequestBody
-                                                  CompanyRequest request) {
+                                                       CompanyRequest request) {
 
         Company company = companyService.create(request);
 

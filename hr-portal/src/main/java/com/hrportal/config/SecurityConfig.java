@@ -63,6 +63,9 @@ public class SecurityConfig {
                                 "/api/users/login",
                                 "/error"
                         ).permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/hr/**").hasAnyRole("HR", "ADMIN")
+                        .requestMatchers("/api/candidate/**").hasAnyRole("CANDIDATE", "HR", "ADMIN")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
@@ -71,6 +74,13 @@ public class SecurityConfig {
                             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                             response.getWriter().write(
                                     "{\"message\":\"Unauthorized: missing or invalid JWT token\",\"status\":401}"
+                            );
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(403);
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            response.getWriter().write(
+                                    "{\"message\":\"Forbidden: insufficient permissions\",\"status\":403}"
                             );
                         }))
                 .addFilterBefore(jwtAuthenticationFilter,
