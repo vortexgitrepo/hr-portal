@@ -118,7 +118,7 @@ export const resourceConfigs = [
     ],
     fields: [
       { name: 'title', label: 'Job title', type: 'text', required: true, placeholder: 'e.g. Frontend Developer' },
-      { name: 'companyId', label: 'Company ID', type: 'number', required: true, placeholder: 'e.g. 1' },
+      { name: 'companyId', label: 'Company', type: 'select', required: true, optionsApi: '/companies' },
       { name: 'location', label: 'Location', type: 'text', placeholder: 'e.g. Remote / Bengaluru' },
       { name: 'employmentType', label: 'Employment type', type: 'select', options: EMPLOYMENT_TYPES },
       { name: 'status', label: 'Status', type: 'select', options: JOB_STATUSES },
@@ -126,7 +126,7 @@ export const resourceConfigs = [
       { name: 'salaryMax', label: 'Salary max', type: 'number', placeholder: 'e.g. 1200000' },
       { name: 'experienceMin', label: 'Experience min (years)', type: 'number', placeholder: 'e.g. 2' },
       { name: 'experienceMax', label: 'Experience max (years)', type: 'number', placeholder: 'e.g. 5' },
-      { name: 'skillIds', label: 'Skill IDs (comma separated)', type: 'numberList', placeholder: 'e.g. 1, 4, 7' },
+      { name: 'skillIds', label: 'Skills', type: 'multiSelect', optionsApi: '/skills' },
       { name: 'description', label: 'Description', type: 'textarea', required: true, wide: true, placeholder: 'Role responsibilities, requirements…' },
     ],
   },

@@ -3,6 +3,43 @@
   overflow: hidden;
 }
 
+.res-multiselect {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--input-bg);
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.res-multiselect .res-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin: 0;
+}
+
+.res-multiselect .res-check:hover {
+  border-color: var(--primary);
+}
+
+.res-multiselect .res-check input {
+  accent-color: var(--primary);
+  width: 14px;
+  height: 14px;
+  margin: 0;
+}
+
 /* Status pill tones used by the generic table */
 .pill-ok {
   background: var(--pill-ok-bg);

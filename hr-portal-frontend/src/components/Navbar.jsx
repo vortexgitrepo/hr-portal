@@ -46,7 +46,7 @@ export default function Navbar() {
             <Link to="/login" className="nav-signin">
               Sign in
             </Link>
-            <Link to="/login" className="btn btn-primary">
+            <Link to="/signup" className="btn btn-primary">
               Get Started
               <Icon name="arrowRight" size={16} />
             </Link>

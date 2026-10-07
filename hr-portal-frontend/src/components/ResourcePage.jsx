@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { api } from '../api/client'
 import Icon from './Icon'
 import './ResourcePage.css'
 
@@ -44,7 +45,9 @@ function isPillValue(value) {
 function emptyForm(fields) {
   const form = {}
   fields.forEach((f) => {
-    form[f.name] = f.type === 'checkbox' ? false : ''
+    if (f.type === 'checkbox') form[f.name] = false
+    else if (f.type === 'multiSelect') form[f.name] = []
+    else form[f.name] = ''
   })
   return form
 }
@@ -54,6 +57,13 @@ function formFromRow(row, fields) {
   fields.forEach((f) => {
     const value = row[f.sourceKey || f.name]
     if (f.type === 'checkbox') form[f.name] = Boolean(value)
+    else if (f.type === 'multiSelect') {
+      if (Array.isArray(value)) {
+        form[f.name] = value.map((item) => (typeof item === 'object' ? String(item.id) : String(item)))
+      } else {
+        form[f.name] = []
+      }
+    }
     else if (f.type === 'numberList') form[f.name] = Array.isArray(value) ? value.join(', ') : ''
     else if (value === null || value === undefined) form[f.name] = ''
     else if (f.type === 'datetime-local' && typeof value === 'string') form[f.name] = value.slice(0, 16)
@@ -68,6 +78,12 @@ function buildPayload(form, fields) {
     const value = form[f.name]
     if (f.type === 'checkbox') {
       payload[f.name] = Boolean(value)
+      return
+    }
+    if (f.type === 'multiSelect') {
+      payload[f.name] = Array.isArray(value)
+        ? value.map((v) => Number(v)).filter((n) => !Number.isNaN(n))
+        : []
       return
     }
     if (value === '' || value === null || value === undefined) {
@@ -124,6 +140,7 @@ export default function ResourcePage({
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
+  const [dropdownOptions, setDropdownOptions] = useState({})
 
   const load = useCallback(async () => {
     try {
@@ -144,6 +161,27 @@ export default function ResourcePage({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load()
   }, [load])
+
+  const fetchedOptions = useRef(new Set())
+
+  useEffect(() => {
+    const fieldsToFetch = fields.filter(
+      (f) => (f.type === 'multiSelect' || f.type === 'select') && f.optionsApi && !fetchedOptions.current.has(f.name)
+    )
+    if (fieldsToFetch.length === 0) return
+    fieldsToFetch.forEach(async (field) => {
+      fetchedOptions.current.add(field.name)
+      try {
+        const data = await api.get(field.optionsApi)
+        setDropdownOptions((prev) => ({
+          ...prev,
+          [field.name]: data.map((item) => ({ value: item.id, label: item.name })),
+        }))
+      } catch (err) {
+        console.error(`Failed to load options for ${field.name}`, err)
+      }
+    })
+  }, [fields])
 
   useEffect(() => {
     if (!notice) return undefined
@@ -248,6 +286,9 @@ export default function ResourcePage({
     }
 
     if (field.type === 'select') {
+      const options = field.optionsApi
+        ? (dropdownOptions[field.name] || [])
+        : (field.options || [])
       return (
         <select
           {...common}
@@ -255,12 +296,44 @@ export default function ResourcePage({
           onChange={(e) => setForm({ ...form, [field.name]: e.target.value })}
         >
           <option value="">—</option>
-          {field.options.map((option) => (
-            <option key={option} value={option}>
-              {option.replace(/_/g, ' ')}
-            </option>
-          ))}
+          {field.optionsApi
+            ? options.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))
+            : options.map((option) => (
+                <option key={option} value={option}>
+                  {option.replace(/_/g, ' ')}
+                </option>
+              ))}
         </select>
+      )
+    }
+
+    if (field.type === 'multiSelect') {
+      const options = dropdownOptions[field.name] || []
+      const selectedValues = Array.isArray(value) ? value : []
+      return (
+        <div className="res-multiselect">
+          {options.length === 0 && <p className="muted" style={{ fontSize: 13 }}>Loading options...</p>}
+          {options.map((option) => (
+            <label key={option.value} className="res-check">
+              <input
+                type="checkbox"
+                checked={selectedValues.includes(String(option.value))}
+                disabled={saving}
+                onChange={(e) => {
+                  const newValues = e.target.checked
+                    ? [...selectedValues, String(option.value)]
+                    : selectedValues.filter((v) => v !== String(option.value))
+                  setForm({ ...form, [field.name]: newValues })
+                }}
+              />
+              {option.label}
+            </label>
+          ))}
+        </div>
       )
     }
 

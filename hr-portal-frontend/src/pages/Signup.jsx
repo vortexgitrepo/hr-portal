@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { login } from '../auth'
+import { signup } from '../auth'
 import Icon from '../components/Icon'
 import ThemeToggle from '../components/ThemeToggle'
 import './Login.css'
 
-export default function Login() {
+export default function Signup() {
   const navigate = useNavigate()
-  const [form, setForm] = useState({ email: 'sajid@gmail.com', password: '12345' })
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'CANDIDATE' })
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -19,18 +19,22 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.email || !form.password) {
-      setError('Please enter email and password.')
+    if (!form.name || !form.email || !form.password) {
+      setError('Please fill in all fields.')
+      return
+    }
+    if (form.password.length < 8) {
+      setError('Password must be at least 8 characters.')
       return
     }
 
     setLoading(true)
     setError('')
     try {
-      await login({ email: form.email, password: form.password })
-      navigate('/dashboard')
+      await signup({ name: form.name, email: form.email, password: form.password, role: form.role })
+      navigate('/login')
     } catch (err) {
-      setError(err.message || 'Login failed. Please try again.')
+      setError(err.message || 'Signup failed. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -49,37 +53,26 @@ export default function Login() {
 
         <div className="login-brand-text">
           <span className="login-tag">
-            <Icon name="shield" size={14} /> Secure HR workspace
+            <Icon name="shield" size={14} /> Join our platform
           </span>
           <h1>
-            Welcome back to your <span className="gradient-text">people hub</span>
+            Create your <span className="gradient-text">account</span>
           </h1>
           <p>
-            Sign in to manage employees, leave requests, attendance and payroll — all in
-            one place.
+            Sign up as a candidate to search and apply for jobs, or as an HR
+            to manage recruitment — all in one place.
           </p>
           <ul>
             <li>
-              <Icon name="check" size={16} /> Role-based access for every team
+              <Icon name="check" size={16} /> Candidates can apply for jobs & build profiles
             </li>
             <li>
-              <Icon name="check" size={16} /> Real-time workforce insights
+              <Icon name="check" size={16} /> HR can post jobs & manage applications
             </li>
             <li>
-              <Icon name="check" size={16} /> Demo mode — no real data is used
+              <Icon name="check" size={16} /> Secure role-based access
             </li>
           </ul>
-        </div>
-
-        <div className="login-mini card">
-          <div className="login-mini-row">
-            <span className="ava blue">AS</span>
-            <div>
-              <b>342 employees checked in</b>
-              <small>Today · 9:00 AM cutoff</small>
-            </div>
-            <span className="pill pill-active">Live</span>
-          </div>
         </div>
       </section>
 
@@ -88,8 +81,22 @@ export default function Login() {
           <ThemeToggle />
         </div>
         <form className="login-form card" onSubmit={handleSubmit}>
-          <h2>Sign in</h2>
-          <p className="login-sub">Sign in with your registered email and password.</p>
+          <h2>Sign up</h2>
+          <p className="login-sub">Create your account to get started.</p>
+
+          <label htmlFor="name">Full name</label>
+          <div className="input-field">
+            <Icon name="user" size={17} />
+            <input
+              id="name"
+              name="name"
+              type="text"
+              autoComplete="name"
+              placeholder="e.g. Aarav Sharma"
+              value={form.name}
+              onChange={handleChange}
+            />
+          </div>
 
           <label htmlFor="email">Email address</label>
           <div className="input-field">
@@ -112,8 +119,8 @@ export default function Login() {
               id="password"
               name="password"
               type={showPassword ? 'text' : 'password'}
-              autoComplete="current-password"
-              placeholder="••••••••"
+              autoComplete="new-password"
+              placeholder="Min 8 characters"
               value={form.password}
               onChange={handleChange}
             />
@@ -127,11 +134,36 @@ export default function Login() {
             </button>
           </div>
 
-          <div className="login-row">
-            <label className="login-check">
-              <input type="checkbox" defaultChecked /> Remember me
+          <label>Register as</label>
+          <div className="signup-roles">
+            <label className={`signup-role-card ${form.role === 'CANDIDATE' ? 'selected' : ''}`}>
+              <input
+                type="radio"
+                name="role"
+                value="CANDIDATE"
+                checked={form.role === 'CANDIDATE'}
+                onChange={handleChange}
+              />
+              <Icon name="user" size={20} />
+              <div>
+                <b>Candidate</b>
+                <small>Search & apply for jobs</small>
+              </div>
             </label>
-            <a href="#forgot">Forgot password?</a>
+            <label className={`signup-role-card ${form.role === 'HR' ? 'selected' : ''}`}>
+              <input
+                type="radio"
+                name="role"
+                value="HR"
+                checked={form.role === 'HR'}
+                onChange={handleChange}
+              />
+              <Icon name="briefcase" size={20} />
+              <div>
+                <b>HR</b>
+                <small>Post jobs & manage hiring</small>
+              </div>
+            </label>
           </div>
 
           {error && (
@@ -143,22 +175,17 @@ export default function Login() {
           <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
             {loading ? (
               <>
-                <span className="spinner" /> Signing in…
+                <span className="spinner" /> Creating account…
               </>
             ) : (
               <>
-                Sign in to Dashboard <Icon name="arrowRight" size={16} />
+                Create account <Icon name="arrowRight" size={16} />
               </>
             )}
           </button>
 
-          <div className="login-demo">
-            <Icon name="zap" size={14} />
-            Demo login — <b>sajid@gmail.com</b> / <b>12345</b>
-          </div>
-
           <p className="login-foot">
-            Don&apos;t have an account? <Link to="/signup">Sign up</Link>
+            Already have an account? <Link to="/login">Sign in</Link>
           </p>
         </form>
       </section>
